@@ -1,6 +1,6 @@
 # Atingle Executor
 
->  **NOTE:** This project is currently **non-functional**. While injection into the Sober Roblox client on Linux is working, **no active exploit features are implemented yet.** This project is a **rewrite-in-progress.**
+>  **WARNING:** Due to roblox changes and sober changes this project is discontinued, i give full permission for someone to fork and carry on under the same name. 
 
 ---
 
