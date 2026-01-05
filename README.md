@@ -1,7 +1,5 @@
 # Atingle Executor
 
->  **WARNING:** Due to roblox changes and sober changes this project is discontinued, i give full permission for someone to fork and carry on under the same name. 
-
 ---
 
 ## What Doesn't Work (Yet)
