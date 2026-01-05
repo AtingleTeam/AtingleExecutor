@@ -1,44 +1,67 @@
---[[ 
+--[[
     Atingle init.lua
 --]]
 
 local getgenv = getgenv or function() return _G end
 local env = getgenv()
 
-env.getgenv         = getgenv
-env.getrenv         = getrenv         or function() return game end
-env.getreg          = getreg          or function() return debug.getregistry() end
-env.getgc           = getgc           or function() return debug.getgc() end
-env.getsenv         = getsenv         or function(_) return nil end
-env.getfenv         = getfenv         or function(_) return nil end
-env.setfenv         = setfenv         or function(_, _) end
-env.getcallingscript= getcallingscript or function() return nil end
-
-env.hookfunction    = hookfunction    or function(_, new) return new end
-env.newcclosure     = newcclosure     or function(fn) return fn end
-env.replaceclosure  = replaceclosure  or function(_, new) return new end
-
-env.checkcaller     = checkcaller     or function() return false end
-env.getupvalue      = debug.getupvalue    or function() end
-env.setupvalue      = debug.setupvalue    or function() end
-env.getinfo         = debug.getinfo       or function() end
-env.getconstants    = debug.getconstants  or function() return {} end
-env.getproto        = debug.getproto      or function() end
-env.getprotos       = debug.getprotos     or function() return {} end
-env.setconstant     = debug.setconstant   or function() end
-
-env.mouse1click     = mouse1click     or function() end
-env.mouse1press     = mouse1press     or function() end
-env.mouse1release   = mouse1release   or function() end
-env.mouse2click     = mouse2click     or function() end
-env.mouse2press     = mouse2press     or function() end
-env.mouse2release   = mouse2release   or function() end
-env.mousemoverel    = mousemoverel    or function(_, _) end
-env.mousemoveabs    = mousemoveabs    or function(_, _) end
-env.keypress        = keypress        or function(_) end
-env.keyrelease      = keyrelease      or function(_) end
-
 local HttpService = game:GetService("HttpService")
+local CoreGui = game:GetService("CoreGui")
+
+local function protect(fn)
+    return (newcclosure or function(f) return f end)(fn)
+end
+
+local api = {
+    getgenv = getgenv,
+    getrenv = getrenv or function() return game end,
+    getreg  = getreg  or function() return debug.getregistry() end,
+    getgc   = getgc   or function() return debug.getgc() end,
+    getsenv = getsenv or function(_) return nil end,
+    getfenv = getfenv or function(_) return nil end,
+    setfenv = setfenv or function(_, _) end,
+    getcallingscript = getcallingscript or function() return nil end,
+    
+    hookfunction   = hookfunction   or function(_, new) return new end,
+    newcclosure    = newcclosure    or function(fn) return fn end,
+    replaceclosure = replaceclosure or function(_, new) return new end,
+    checkcaller    = checkcaller    or function() return false end,
+    
+    mouse1click  = mouse1click  or function() end,
+    mouse1press  = mouse1press  or function() end,
+    mouse1release = mouse1release or function() end,
+    mouse2click  = mouse2click  or function() end,
+    mouse2press  = mouse2press  or function() end,
+    mouse2release = mouse2release or function() end,
+    mousemoverel = mousemoverel or function(_, _) end,
+    mousemoveabs = mousemoveabs or function(_, _) end,
+    keypress     = keypress     or function(_) end,
+    keyrelease   = keyrelease   or function(_) end,
+
+    protect_gui  = protectgui   or function(gui) return gui end,
+    setclipboard = setclipboard or function(text) warn("[setclipboard] Not Currently available") end,
+}
+
+env.debug = env.debug or {}
+local debug_lib = {
+    getupvalue    = debug.getupvalue    or function() end,
+    setupvalue    = debug.setupvalue    or function() end,
+    getinfo       = debug.getinfo       or function() end,
+    getconstants  = debug.getconstants  or function() return {} end,
+    getproto      = debug.getproto      or function() end,
+    getprotos     = debug.getprotos     or function() return {} end,
+    setconstant   = debug.setconstant   or function() end,
+}
+
+for name, fn in pairs(debug_lib) do
+    env.debug[name] = fn
+    env[name] = fn
+end
+
+env.request = request or http_request or function(_)
+    warn("[request] Not Currently supported")
+    return { StatusCode = 0, Body = "unsupported" }
+end
 
 env.http_get = function(url)
     local success, result = pcall(function()
@@ -46,17 +69,6 @@ env.http_get = function(url)
     end)
     return success and result or nil
 end
-
-env.request = request or http_request or function(_)
-    warn("[request] Not supported")
-    return { StatusCode = 0, Body = "unsupported" }
-end
-
-env.setclipboard = setclipboard or function(text)
-    warn("[setclipboard] Clipboard access not available")
-end
-
-env.protect_gui = protectgui or function(gui) return gui end
 
 env.gethui = gethui or function()
     local core = game:GetService("CoreGui")
@@ -90,3 +102,9 @@ function Event:fire(...)
 end
 
 env.Event = Event
+
+for name, func in pairs(api) do
+    if not env[name] then
+        env[name] = func
+    end
+end
