@@ -4,20 +4,39 @@
 #include <string.h>
 #include <unistd.h>
 #include <dlfcn.h>
-#include <sys/mman.h>
-#include <limits.h>
-#include <errno.h>
-#include "atingle.h"
+
+typedef void (*GameSendChatFunc)(const char* msg, int type);
+
+#define GAME_SEND_CHAT_MESSAGE_FUNCTION_OFFSET 0x0
+
+unsigned long get_lib_base(const char* name) {
+    char line[512];
+    FILE* f = fopen("/proc/self/maps", "r");
+    if (!f) return 0;
+    
+    unsigned long addr = 0;
+    while (fgets(line, sizeof(line), f)) {
+        if (strstr(line, name)) {
+            addr = strtoul(line, NULL, 16);
+            break;
+        }
+    }
+    fclose(f);
+    return addr;
+}
 
 void print_str(const char* message) {
-    unsigned long chat_function_absolute_addr = ROBLOX_PLAYER_MODULE_BASE_ADDRESS + GAME_SEND_CHAT_MESSAGE_FUNCTION_OFFSET;
-    GameSendChatFunc send_chat_func = (GameSendChatFunc)chat_function_absolute_addr;
+    unsigned long base = get_lib_base("libroblox.so");
+    if (base == 0) return;
+
+    unsigned long chat_func_addr = base + GAME_SEND_CHAT_MESSAGE_FUNCTION_OFFSET;
+    GameSendChatFunc send_chat_func = (GameSendChatFunc)chat_func_addr;
+
     if (send_chat_func) {
         send_chat_func(message, 0);
-    } else {
-        fprintf(stderr, "Failed to locate chat function at address: 0x%lx\n", chat_function_absolute_addr);
     }
 }
+
 __attribute__((constructor))
 void init_lib() {
     print_str("Atingle loaded!");
