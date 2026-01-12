@@ -58,16 +58,30 @@ for name, fn in pairs(debug_lib) do
     env[name] = fn
 end
 
-env.request = request or http_request or function(_)
-    warn("[request] Not Currently supported")
-    return { StatusCode = 0, Body = "unsupported" }
+env.request = request or http_request or function(opts)
+	if type(opts) ~= "table" or not opts.Url then
+		return { StatusCode = 400, Body = "invalid request" }
+	end
+
+	local ok, result = pcall(function()
+		if opts.Method == "POST" then
+			return HttpService:PostAsync(opts.Url, opts.Body or "")
+		else
+			return HttpService:GetAsync(opts.Url)
+		end
+	end)
+
+	return {
+		StatusCode = ok and 200 or 500,
+		Body = ok and result or "request failed"
+	}
 end
 
 env.http_get = function(url)
-    local success, result = pcall(function()
-        return HttpService:GetAsync(url)
-    end)
-    return success and result or nil
+	local ok, res = pcall(function()
+		return HttpService:GetAsync(url)
+	end)
+	return ok and res or nil
 end
 
 env.gethui = gethui or function()
