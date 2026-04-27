@@ -4,10 +4,7 @@
 
 ---
 
-## What Doesn't Work (Yet)
-- No active exploit functions (e.g., Lua execution, memory hooks)
-- No in-game script control or GUI
-- Offsets for Sober are not public
+## This will never be functional.
 
 ---
 
